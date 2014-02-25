@@ -1,0 +1,68 @@
+int XDIM = 640;
+int YDIM = 480;
+float EPSILON = 7.0;
+int NUMNODES = 5000;
+
+Pixel[] nodes;
+int nodeIndex;
+
+Pixel randomPixel, nn, newPixel;
+
+void setup() {
+  frameRate(30);
+  size(XDIM, YDIM);
+
+  reset();
+}
+
+void reset() {
+  background(0);
+
+  nodes = new Pixel[NUMNODES];
+
+  nodeIndex = 0;
+
+  // Start in the center
+  nodes[nodeIndex++] = new Pixel(XDIM/2, YDIM/2);
+}
+
+class Pixel {
+  int x;
+  int y;
+
+  Pixel(int xPos, int yPos) {
+    x = xPos;
+    y = yPos;
+  }
+}
+
+void draw() {
+  if (nodeIndex >= NUMNODES) reset();
+
+  randomPixel = new Pixel(int(random(XDIM)), int(random(YDIM)));
+  nn = nodes[0];
+  for (int i = 0; i < nodes.length; i++) {
+    if (nodes[i] == null) break;
+    if (distanceBetween(nodes[i], randomPixel) < distanceBetween(nn, randomPixel)) {
+      nn = nodes[i];
+    }
+  }
+
+  newPixel = stepFromP1ToP2(nn, randomPixel);
+  nodes[nodeIndex++] = newPixel;
+  stroke(255);
+  line(nn.x, nn.y, newPixel.x, newPixel.y);
+}
+
+float distanceBetween(Pixel p1, Pixel p2) {
+  return sqrt( pow((p1.x-p2.x),2) + pow((p1.y-p2.y),2) );
+}
+
+Pixel stepFromP1ToP2(Pixel p1, Pixel p2) {
+  if (distanceBetween(p1, p2) < EPSILON) {
+    return p2;
+  } else {
+    float theta = atan2(p2.y - p1.y, p2.x - p1.x);
+    return new Pixel(int(p1.x + EPSILON*cos(theta)), int(p1.y + EPSILON*sin(theta)));
+  }
+}

@@ -1,0 +1,138 @@
+// Space
+int DIM = 2;
+int XDIM = 400;
+int YDIM = 400;
+int BG = 255;
+int AXIS;
+int SCALING = 10;
+int CX; // center
+int CY;
+int GRID_COLOR = 200;
+int GRID_COLOR_CENTER= 100;
+
+// Node
+int NODE_COLOR = 0x0000ff;
+Node[] NODE_LIST;
+int NODE_RAD = 5;
+
+class Node {
+  int x;
+  int y;
+  int xPix;
+  int yPix;
+
+  Node leftChild;
+  Node rightChild;
+
+  Node(int xPos, int yPos) {
+    if (xPos > XDIM) {
+      xPos = XDIM;
+    }
+    if (yPos > YDIM) {
+      yPos = YDIM;
+    }
+
+    x = xPos;
+    y = yPos;
+
+    // convert to pixel position
+
+  }
+
+  String toString() {
+    return "x: " + x + ", y: " + y;
+  }
+}
+
+void setup() {
+  size(XDIM, YDIM);
+  background(BG);
+  fill(NODE_COLOR);
+
+  CX = XDIM / 2;
+  CY = YDIM / 2;
+
+  drawGrid();
+
+  NODE_LIST = new Node[6];
+  NODE_LIST[0] = new Node(2, 3);
+  NODE_LIST[1] = new Node(5, 4);
+  NODE_LIST[2] = new Node(9, 6);
+  NODE_LIST[3] = new Node(4, 7);
+  NODE_LIST[4] = new Node(8, 1);
+  NODE_LIST[5] = new Node(7, 2);
+  for (int i = 0; i < NODE_LIST.length; i++) {
+    markNode(NODE_LIST[i]);
+  }
+
+  scale(SCALING);
+  Node root = buildKdtree(NODE_LIST, 0);
+}
+
+Node buildKdtree(Node[] nodeList, int depth) {
+  if (nodeList.length == 0) {
+    return null;
+  }
+
+  // Select axis based on depth so that axis cycles through all valid values
+  AXIS = depth % 2;
+
+  // sort point list and choose median as pivot element
+  Arrays.sort(nodeList, new Comparator() {
+    public int compare(Object o1, Object o2) {
+      Node n1 = (Node) o1;
+      Node n2 = (Node) o2;
+
+      if (AXIS == 0) {
+        if (n1.x > n2.x) return 1;
+        else if (n1.x < n2.x) return -1;
+        else return 0;
+      } else {
+        if (n1.y > n2.y) return 1;
+        else if (n1.y < n2.y) return -1;
+        else return 0;
+      }
+    }
+  });
+  int median = nodeList.length / 2;
+
+  Node node = nodeList[0];
+
+  if (median == 0) {
+    node.leftChild = null;
+    node.rightChild = null;
+    return node;
+  }
+
+  // build left subtree recursively
+  node.leftChild = buildKdtree(Arrays.copyOfRange(nodeList, 0, median), depth+1);
+  // build right subtree recursively
+  node.rightChild = buildKdtree(Arrays.copyOfRange(nodeList, median, nodeList.length), depth+1);
+
+  return node;
+}
+
+void drawGrid() {
+  int i = 0;
+  while (i < XDIM) {
+    // draw vertical grid
+    stroke(GRID_COLOR);
+    if (i == XDIM / 2 || i == YDIM / 2) {
+      stroke(GRID_COLOR_CENTER);
+    }
+
+    line(i, 0,  i, YDIM);
+    // draw horizontal grid
+    line(0, i, XDIM, i);
+    i += SCALING;
+  }
+}
+
+void markNode(Node node) {
+  ellipse(
+    node.x*SCALING + CX,
+    node.y*SCALING + CY,
+
+    NODE_RAD, NODE_RAD
+  );
+}
